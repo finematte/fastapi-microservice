@@ -4,7 +4,6 @@ from fastapi import FastAPI, Response, Request
 from dependencies import async_session
 
 from routers import (
-    user_route,
     device_route,
     data_route,
     task_route,
@@ -14,7 +13,6 @@ from routers import (
 
 app = FastAPI()
 
-app.include_router(user_route.router)
 app.include_router(device_route.router)
 app.include_router(default_route.router)
 app.include_router(data_route.router)
@@ -37,7 +35,7 @@ async def db_session_middleware(request: Request, call_next):
 
 if __name__ == "__main__":
     try:
-        port = os.environ.get("PORT", "5000")
+        port = os.environ.get("PORT", "8000")
         port = int(port)
     except ValueError:
         port = 5000

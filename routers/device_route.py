@@ -10,10 +10,9 @@ from models.device import Device
 from models.data import Data
 from models.historical_data import HistoricalData
 from models.daily_average import DailyAverage
-from models.user import User
 
 from schemas.data import DataUpdate
-from schemas.device import NewDevice, GetValidateInfo
+from schemas.device import DeviceID
 from schemas.task import TaskManage
 
 from dependencies import get_db
@@ -28,9 +27,7 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
     Returns all devices from the database
     """
     result = await db.execute(
-        select(Device).options(
-            Load(Device).load_only(Device.device_id, Device.user_login, Device.name)
-        )
+        select(Device).options(Load(Device).load_only(Device.device_id, Device.name))
     )
     devices = result.scalars().all()
 
@@ -205,20 +202,10 @@ async def manage_device_tasks(
 
 
 @router.post("/add_device")
-async def add_device_to_user(
-    device_data: NewDevice, db: AsyncSession = Depends(get_db)
-):
+async def add_device_to_user(device_data: DeviceID, db: AsyncSession = Depends(get_db)):
     """
     Adds a new device to an existing user
     """
-    user = await db.execute(
-        select(User).filter(User.user_login == device_data.user_login)
-    )
-    user = user.scalars().first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-
     device = await db.execute(
         select(Device).filter(Device.device_id == device_data.device_id)
     )
@@ -228,11 +215,7 @@ async def add_device_to_user(
             status_code=404, detail="Device with this ID is already in the database."
         )
 
-    new_device = Device(
-        name=device_data.name,
-        user_login=device_data.user_login,
-        device_id=device_data.device_id,
-    )
+    new_device = Device(device_id=device_data.device_id)
     db.add(new_device)
     await db.commit()
 

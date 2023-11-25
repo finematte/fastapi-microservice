@@ -7,9 +7,6 @@ from core.settings import Settings
 # Load environment variables
 load_dotenv()
 
-JWT_SECRET_KEY = Settings.JWT_SECRET_KEY
-ALGORITHM = Settings.ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = Settings.ACCESS_TOKEN_EXPIRE_MINUTES
 DATABASE_URL = Settings.DATABASE_URL
 
 

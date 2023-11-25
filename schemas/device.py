@@ -1,11 +1,5 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 
-class NewDevice(BaseModel):
-    user_login: str
-    device_id: int
-    name: str
-
-
-class GetValidateInfo(BaseModel):
+class DeviceID(BaseModel):
     device_id: int
