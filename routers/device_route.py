@@ -13,7 +13,8 @@ from models.daily_average import DailyAverage
 
 from schemas.data import DataUpdate
 from schemas.device import DeviceID
-from schemas.task import TaskManage
+from schemas.task import TaskAdd
+from schemas.task import TaskUpdate
 
 from dependencies import get_db
 from core.security import get_device_id
@@ -27,12 +28,12 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
     Returns all devices from the database
     """
     result = await db.execute(
-        select(Device).options(Load(Device).load_only(Device.device_id, Device.name))
+        select(Device).options(Load(Device).load_only(Device.device_id))
     )
     devices = result.scalars().all()
 
     if not devices:
-        raise HTTPException(status_code=400, detail="No devices in the database.")
+        raise HTTPException(status_code=400, detail="No devices in the database")
 
     return devices
 
@@ -172,43 +173,71 @@ async def update_device_data(
     return Response(content="Data has been updated.", status_code=200)
 
 
-@router.post("/devices/tasks")
+@router.post("/devices/tasks/add")
 async def manage_device_tasks(
-    task_info: TaskManage, db: AsyncSession = Depends(get_db)
+    task_info: TaskAdd,
+    device_id: int = Depends(get_device_id),
+    db: AsyncSession = Depends(get_db),
 ):
     """
-    Updates existing task or adds a new one.
+    Adds new task for given device_id
     """
-    task_query = select(Task).filter(
-        Task.device_id == task_info.device_id, Task.task_id == task_info.task_id
+    new_task = Task(
+        device_id=device_id,
+        task_number=task_info.task_number,
+        status=task_info.status,
     )
-    task_result = await db.execute(task_query)
-    task = task_result.scalars().first()
+    db.add(new_task)
+    await db.commit()
+    await db.refresh(new_task)
 
-    if task:
+    return {"message": "Task added successfully", "task_id": new_task.task_id}
+
+
+@router.put("/devices/tasks/update")
+async def manage_device_tasks(
+    task_info: TaskUpdate,
+    device_id: int = Depends(get_device_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Updates the status of a task with the given task_id
+    """
+    result = await db.execute(
+        select(Task)
+        .filter(Task.device_id == device_id, Task.task_id == task_info.task_id)
+        .options(
+            Load(Task).load_only(
+                Task.task_id, Task.task_number, Task.status, Task.device_id
+            )
+        )
+    )
+
+    task = result.scalars().first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    else:
         task.status = task_info.status
         await db.commit()
-        return Response(content="Task updated successfully.", status_code=200)
-    else:
-        new_task = Task(
-            device_id=task_info.device_id,
-            task_number=task_info.task_number,
-            status=task_info.status,
-        )
-        db.add(new_task)
-        await db.commit()
 
-        return Response(content="Task created successfully.", status_code=200)
+        return {
+            "message": "Task status updated successfully",
+            "task_id": task_info.task_id,
+            "new_status": task_info.status,
+        }
 
 
 @router.post("/add_device")
-async def add_device_to_user(device_data: DeviceID, db: AsyncSession = Depends(get_db)):
+async def add_new_device(device_data: DeviceID, db: AsyncSession = Depends(get_db)):
     """
-    Adds a new device to an existing user
+    Adds a new device to the database
     """
     device = await db.execute(
         select(Device).filter(Device.device_id == device_data.device_id)
     )
+
+    device = device.scalars().first()
 
     if device:
         raise HTTPException(

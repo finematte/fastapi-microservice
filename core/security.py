@@ -21,7 +21,6 @@ def create_device_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + timedelta(minutes=60 * 24)
     to_encode.update({"exp": expire})
 
-    # Convert device_id to string for JWT encoding
     to_encode["sub"] = str(to_encode["sub"])
 
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=ALGORITHM)
