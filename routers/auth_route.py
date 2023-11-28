@@ -69,7 +69,7 @@ async def authorize_device(
                 db.add(new_device)
                 await db.commit()
                 break
-
+        """
         headers = {"Content-Type": "application/json"}
         response_2 = requests.post(
             ruby_backend_url + "api/v1/devices",
@@ -82,6 +82,8 @@ async def authorize_device(
                 detail="Error! Something went wrong.",
             )
         else:
-            return JSONResponse(
-                content={"message": "Device authorized!", "device_id": new_device_id}
-            )
+            
+        """
+        return JSONResponse(
+            content={"message": "Device authorized!", "device_id": new_device_id}
+        )

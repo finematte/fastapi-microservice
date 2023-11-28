@@ -7,7 +7,7 @@ from models.base import Base
 class Data(Base):
     __tablename__ = "data"
     data_id = Column(Integer, primary_key=True)
-    device_id = Column(VARCHAR, ForeignKey("devices.device_id"), unique=True)
+    device_id = Column(Integer, ForeignKey("devices.device_id"), unique=True)
     temp = Column(Float)
     soil_hum = Column(Float)
     air_hum = Column(Float)

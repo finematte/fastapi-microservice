@@ -39,7 +39,7 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
 
 @router.get("/devices/data")
 async def read_device_data(
-    device_id: str = Depends(get_device_id),
+    device_id: int = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -63,7 +63,7 @@ async def read_device_data(
 
 @router.get("/devices/tasks")
 async def read_device_tasks(
-    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns tasks for given device's id
@@ -86,7 +86,7 @@ async def read_device_tasks(
 
 @router.get("/devices/data/history")
 async def read_device_data_history(
-    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns daily average data from last 7 days
@@ -116,7 +116,7 @@ async def read_device_data_history(
 @router.post("/devices/data")
 async def update_device_data(
     payload: DataUpdate,
-    device_id: str = Depends(get_device_id),
+    device_id: int = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -175,7 +175,7 @@ async def update_device_data(
 @router.post("/devices/tasks/add")
 async def manage_device_tasks(
     task_info: TaskAdd,
-    device_id: str = Depends(get_device_id),
+    device_id: int = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """

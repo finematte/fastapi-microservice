@@ -47,6 +47,7 @@ async def get_device_id(token: HTTPAuthorizationCredentials = Depends(security))
         raise credentials_exception
 
     device_id = payload.get("sub")
+    device_id = int(device_id)
     if device_id is None:
         raise credentials_exception
 
