@@ -52,31 +52,30 @@ async def authorize_device(
         headers=headers,
     )
 
-    print(response_1.text)
     if response_1.status_code != 200:
         raise HTTPException(
             status_code=response_1.status_code, detail="Error! Invalid code."
         )
     else:
         while True:
-            device_id = uuid.uuid4
+            new_device_id = str(uuid.uuid4())
             existing_device = await db.execute(
-                select(Device).filter(Device.device_id == device_id)
+                select(Device).filter(Device.device_id == new_device_id)
             )
-            if existing_device.scalars().first() is None:
-                new_device = Device(device_id=device_id)
+
+            existing_device = existing_device.scalars().first()
+            if existing_device is None:
+                new_device = Device(device_id=new_device_id)
                 db.add(new_device)
                 await db.commit()
                 break
 
-        print(device_id)
         headers = {"Content-Type": "application/json"}
         response_2 = requests.post(
             ruby_backend_url + "api/v1/devices",
-            json={"code": code, "device": device_id},
+            json={"code": code, "device": new_device_id},
             headers=headers,
         )
-        print(response_2.text)
         if response_2.status_code != 200:
             raise HTTPException(
                 status_code=response_2.status_code,
@@ -84,5 +83,5 @@ async def authorize_device(
             )
         else:
             return JSONResponse(
-                content={"message": "Device authorized!", "device_id": device_id}
+                content={"message": "Device authorized!", "device_id": new_device_id}
             )
