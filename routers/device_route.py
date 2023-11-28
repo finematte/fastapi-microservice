@@ -1,9 +1,9 @@
 from fastapi import HTTPException, Depends, APIRouter, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Load
 from datetime import datetime
-from fastapi import HTTPException
 
 from models.task import Task
 from models.device import Device
@@ -12,7 +12,6 @@ from models.historical_data import HistoricalData
 from models.daily_average import DailyAverage
 
 from schemas.data import DataUpdate
-from schemas.device import DeviceID
 from schemas.task import TaskAdd
 from schemas.task import TaskUpdate
 
@@ -40,7 +39,7 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
 
 @router.get("/devices/data")
 async def read_device_data(
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -64,7 +63,7 @@ async def read_device_data(
 
 @router.get("/devices/tasks")
 async def read_device_tasks(
-    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns tasks for given device's id
@@ -87,7 +86,7 @@ async def read_device_tasks(
 
 @router.get("/devices/data/history")
 async def read_device_data_history(
-    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns daily average data from last 7 days
@@ -117,7 +116,7 @@ async def read_device_data_history(
 @router.post("/devices/data")
 async def update_device_data(
     payload: DataUpdate,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -176,7 +175,7 @@ async def update_device_data(
 @router.post("/devices/tasks/add")
 async def manage_device_tasks(
     task_info: TaskAdd,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -191,7 +190,9 @@ async def manage_device_tasks(
     await db.commit()
     await db.refresh(new_task)
 
-    return {"message": "Task added successfully", "task_id": new_task.task_id}
+    return JSONResponse(
+        content={"message": "Task added successfully", "task_id": new_task.task_id}
+    )
 
 
 @router.put("/devices/tasks/update")
@@ -216,36 +217,17 @@ async def manage_device_tasks(
     task = result.scalars().first()
 
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail="Task not found.")
+    elif task.status == 1:
+        raise HTTPException(status_code=500, detail="Task already finished.")
     else:
         task.status = task_info.status
         await db.commit()
 
-        return {
-            "message": "Task status updated successfully",
-            "task_id": task_info.task_id,
-            "new_status": task_info.status,
-        }
-
-
-@router.post("/add_device")
-async def add_new_device(device_data: DeviceID, db: AsyncSession = Depends(get_db)):
-    """
-    Adds a new device to the database
-    """
-    device = await db.execute(
-        select(Device).filter(Device.device_id == device_data.device_id)
-    )
-
-    device = device.scalars().first()
-
-    if device:
-        raise HTTPException(
-            status_code=404, detail="Device with this ID is already in the database."
+        return JSONResponse(
+            content={
+                "message": "Task status updated successfully",
+                "task_id": task_info.task_id,
+                "new_status": task_info.status,
+            }
         )
-
-    new_device = Device(device_id=device_data.device_id)
-    db.add(new_device)
-    await db.commit()
-
-    return Response(content="Device added to user successfully.", status_code=200)
