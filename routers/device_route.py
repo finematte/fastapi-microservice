@@ -32,7 +32,7 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
     devices = result.scalars().all()
 
     if not devices:
-        return JSONResponse(content={[]}, status_code=404)
+        return JSONResponse(content={}, status_code=404)
 
     return devices
 
@@ -56,7 +56,7 @@ async def read_device_data(
     )
     device_data = result.scalars().all()
     if not device_data:
-        return JSONResponse(content={[]}, status_code=404)
+        return JSONResponse(content={}, status_code=404)
 
     return device_data
 
