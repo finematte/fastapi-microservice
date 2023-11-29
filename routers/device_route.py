@@ -32,7 +32,7 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
     devices = result.scalars().all()
 
     if not devices:
-        raise HTTPException(status_code=400, detail="No devices in the database")
+        return JSONResponse(json={[]}, status_code=404)
 
     return devices
 
@@ -56,7 +56,7 @@ async def read_device_data(
     )
     device_data = result.scalars().all()
     if not device_data:
-        raise HTTPException(status_code=404, detail=f"No data found for device.")
+        return JSONResponse(json={[]}, status_code=404)
 
     return device_data
 
@@ -79,7 +79,7 @@ async def read_device_tasks(
     )
     tasks = result.scalars().all()
     if not tasks:
-        raise HTTPException(status_code=404, detail="No tasks found for device.")
+        return JSONResponse(json={[]}, status_code=404)
 
     return tasks
 
@@ -107,7 +107,7 @@ async def read_device_data_history(
     )
     device_historical_data = result.scalars().all()
     if not device_historical_data:
-        raise HTTPException(status_code=404, detail=f"No data found for device.")
+        return JSONResponse(json={[]}, status_code=404)
 
     return device_historical_data
 
@@ -138,7 +138,7 @@ async def update_device_data(
             db.add(new_data_entry)
             await db.commit()
         except:
-            raise HTTPException(status_code=400, detail="Device not found.")
+            raise HTTPException(status_code=404, detail="Device not found.")
     else:
         data_entry.soil_hum = payload.soil_hum
         data_entry.light = payload.light
@@ -169,7 +169,10 @@ async def update_device_data(
         db.add(new_historical_data)
         await db.commit()
 
-    return Response(content="Data has been updated.", status_code=200)
+        return JSONResponse(
+            json={"message": "Data has been updated."},
+            status_code=200,
+        )
 
 
 @router.post("/devices/tasks/add")
@@ -191,7 +194,8 @@ async def manage_device_tasks(
     await db.refresh(new_task)
 
     return JSONResponse(
-        content={"message": "Task added successfully", "task_id": new_task.task_id}
+        json={"message": "Task added successfully", "task_id": new_task.task_id},
+        status_code=200,
     )
 
 
@@ -225,9 +229,10 @@ async def manage_device_tasks(
         await db.commit()
 
         return JSONResponse(
-            content={
+            json={
                 "message": "Task status updated successfully",
                 "task_id": task_info.task_id,
                 "new_status": task_info.status,
-            }
+            },
+            status_code=200,
         )

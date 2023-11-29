@@ -1,8 +1,8 @@
-from fastapi import HTTPException, Depends, APIRouter
+from fastapi import Depends, APIRouter
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Load
-from fastapi import HTTPException
 
 from models.task import Task
 
@@ -26,6 +26,9 @@ async def read_tasks(db: AsyncSession = Depends(get_db)):
     tasks = result.scalars().all()
 
     if not tasks:
-        raise HTTPException(status_code=400, detail="No tasks in the database.")
+        return JSONResponse(
+            json={"message": "No tasks in the database."},
+            status_code=404,
+        )
 
     return tasks

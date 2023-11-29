@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from datetime import timedelta
 import requests
 import uuid
+import random
 
 from schemas.device import DeviceID, AuthorizationCode
 from models.device import Device
@@ -27,7 +28,10 @@ async def request_token(payload: DeviceID, db: AsyncSession = Depends(get_db)):
     device = device.scalars().first()
 
     if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+        return JSONResponse(
+            json={"message": "Device not found."},
+            status_code=404,
+        )
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_device_token(
@@ -51,14 +55,14 @@ async def authorize_device(
         json={"code": code},
         headers=headers,
     )
-
+    print(response_1.text)
     if response_1.status_code != 200:
         raise HTTPException(
             status_code=response_1.status_code, detail="Error! Invalid code."
         )
     else:
         while True:
-            new_device_id = str(uuid.uuid4())
+            new_device_id = random.randint(100, 999)
             existing_device = await db.execute(
                 select(Device).filter(Device.device_id == new_device_id)
             )
@@ -69,21 +73,21 @@ async def authorize_device(
                 db.add(new_device)
                 await db.commit()
                 break
-        """
+
         headers = {"Content-Type": "application/json"}
         response_2 = requests.post(
             ruby_backend_url + "api/v1/devices",
-            json={"code": code, "device": new_device_id},
+            json={"code": code, "device_id": new_device_id},
             headers=headers,
         )
-        if response_2.status_code != 200:
+
+        if response_2.status_code != 201:
             raise HTTPException(
                 status_code=response_2.status_code,
                 detail="Error! Something went wrong.",
             )
         else:
-            
-        """
-        return JSONResponse(
-            content={"message": "Device authorized!", "device_id": new_device_id}
-        )
+            return JSONResponse(
+                content={"message": "Device authorized!", "device_id": new_device_id},
+                status_code=200,
+            )
