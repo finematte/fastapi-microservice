@@ -32,7 +32,7 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
     devices = result.scalars().all()
 
     if not devices:
-        return JSONResponse(json={[]}, status_code=404)
+        return JSONResponse(json={}, status_code=404)
 
     return devices
 
@@ -56,7 +56,7 @@ async def read_device_data(
     )
     device_data = result.scalars().all()
     if not device_data:
-        return JSONResponse(json={[]}, status_code=404)
+        return JSONResponse(json={}, status_code=404)
 
     return device_data
 
@@ -79,7 +79,7 @@ async def read_device_tasks(
     )
     tasks = result.scalars().all()
     if not tasks:
-        return JSONResponse(json={[]}, status_code=404)
+        return JSONResponse(json={}, status_code=404)
 
     return tasks
 
@@ -107,7 +107,7 @@ async def read_device_data_history(
     )
     device_historical_data = result.scalars().all()
     if not device_historical_data:
-        return JSONResponse(json={[]}, status_code=404)
+        return JSONResponse(json={}, status_code=404)
 
     return device_historical_data
 
@@ -138,7 +138,7 @@ async def update_device_data(
             db.add(new_data_entry)
             await db.commit()
         except:
-            raise HTTPException(status_code=404, detail="Device not found.")
+            return JSONResponse(json={}, status_code=404)
     else:
         data_entry.soil_hum = payload.soil_hum
         data_entry.light = payload.light
@@ -221,9 +221,9 @@ async def manage_device_tasks(
     task = result.scalars().first()
 
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found.")
+        return JSONResponse(json={"message": "Task not found."}, status_code=404)
     elif task.status == 1:
-        raise HTTPException(status_code=500, detail="Task already finished.")
+        return JSONResponse(json={"message": "Task already finished."}, status_code=500)
     else:
         task.status = task_info.status
         await db.commit()

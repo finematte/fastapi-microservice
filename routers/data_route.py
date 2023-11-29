@@ -26,6 +26,6 @@ async def read_data(db: AsyncSession = Depends(get_db)):
     data = result.scalars().all()
 
     if not data:
-        return JSONResponse(content={[]}, status_code=404)
+        return JSONResponse(json={}, status_code=404)
 
     return data

@@ -27,7 +27,7 @@ async def read_tasks(db: AsyncSession = Depends(get_db)):
 
     if not tasks:
         return JSONResponse(
-            json={"message": "No tasks in the database."},
+            json={},
             status_code=404,
         )
 
