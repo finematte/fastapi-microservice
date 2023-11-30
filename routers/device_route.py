@@ -169,10 +169,10 @@ async def update_device_data(
         db.add(new_historical_data)
         await db.commit()
 
-        return JSONResponse(
-            json={"message": "Data has been updated."},
-            status_code=200,
-        )
+    return JSONResponse(
+        json={"message": "Data has been updated."},
+        status_code=200,
+    )
 
 
 @router.post("/devices/tasks/add")
