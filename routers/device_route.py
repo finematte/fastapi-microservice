@@ -170,7 +170,7 @@ async def update_device_data(
         await db.commit()
 
     return JSONResponse(
-        json={"message": "Data has been updated."},
+        content={"message": "Data has been updated."},
         status_code=200,
     )
 
