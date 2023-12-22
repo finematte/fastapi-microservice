@@ -14,7 +14,17 @@ from routers import (
     default_route,
 )
 
-limiter = Limiter(key_func=get_remote_address)
+
+def get_client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        ip = forwarded_for.split(",")[0]  # Take the first IP if there's a list
+    else:
+        ip = request.client.host
+    return ip
+
+
+limiter = Limiter(key_func=get_client_ip)
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

@@ -15,10 +15,11 @@ from slowapi.util import get_remote_address
 
 from schemas.data import DataUpdate
 
+from main import get_client_ip
 from dependencies import get_db
 from core.security import get_device_id
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_client_ip)
 
 router = APIRouter()
 
