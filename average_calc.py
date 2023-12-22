@@ -31,6 +31,7 @@ def calculate_daily_averages_and_prune():
         )
 
         result = cur.fetchone()
+
         if result:
             cur.execute(
                 """

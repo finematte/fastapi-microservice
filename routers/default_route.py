@@ -9,4 +9,4 @@ async def default_page():
     Default message
     """
 
-    return Response(content="Hi there :)", status_code=200)
+    return Response(content="200", status_code=200)

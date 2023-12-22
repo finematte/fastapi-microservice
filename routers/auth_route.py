@@ -22,6 +22,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = Settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 @router.post("/request_token")
 async def request_token(payload: DeviceID, db: AsyncSession = Depends(get_db)):
+    """
+    Generates JWT auth token for device with given device_id.
+    """
     device = await db.execute(
         select(Device).filter(Device.device_id == payload.device_id)
     )
@@ -29,7 +32,7 @@ async def request_token(payload: DeviceID, db: AsyncSession = Depends(get_db)):
 
     if not device:
         return JSONResponse(
-            json={"message": "Device not found."},
+            content={"message": "Device not found."},
             status_code=404,
         )
 
@@ -38,13 +41,16 @@ async def request_token(payload: DeviceID, db: AsyncSession = Depends(get_db)):
         data={"sub": payload.device_id}, expires_delta=access_token_expires
     )
 
-    return {"access_token": token}
+    return JSONResponse(content={"access_token": token}, status_code=200)
 
 
 @router.post("/authorize_device")
 async def authorize_device(
     payload: AuthorizationCode, db: AsyncSession = Depends(get_db)
 ):
+    """
+    Validates pairing request from the device with Ruby backend; creates device in the database.
+    """
     code = payload.code
 
     ruby_backend_url = "https://ruby-backend-api.greenmind.site/"
@@ -55,7 +61,7 @@ async def authorize_device(
         json={"code": code},
         headers=headers,
     )
-    print(response_1.text)
+
     if response_1.status_code != 200:
         raise HTTPException(
             status_code=response_1.status_code, detail="Error! Invalid code."
@@ -63,11 +69,13 @@ async def authorize_device(
     else:
         while True:
             new_device_id = random.randint(100, 999)
+
             existing_device = await db.execute(
                 select(Device).filter(Device.device_id == new_device_id)
             )
 
             existing_device = existing_device.scalars().first()
+
             if existing_device is None:
                 new_device = Device(device_id=new_device_id)
                 db.add(new_device)

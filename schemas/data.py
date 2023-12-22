@@ -32,5 +32,5 @@ class DataUpdate(BaseModel):
     @validator("light")
     def validate_light(cls, light):
         if light < 0.0 or light > 51000.0:
-            raise ValueError("Invalid light value. Allowed range: 0.0 to 1000.0.")
+            raise ValueError("Invalid light value. Allowed range: 0.0 to 51000.0.")
         return light
