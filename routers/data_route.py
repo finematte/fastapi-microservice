@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Load
+from sqlalchemy import desc
 from datetime import datetime
 
 from models.data import Data
@@ -73,6 +74,7 @@ async def read_device_data_history(
     result = await db.execute(
         select(DailyAverage)
         .filter_by(device_id=device_id)
+        .order_by(desc(DailyAverage.date))
         .options(
             Load(DailyAverage).load_only(
                 DailyAverage.device_id,

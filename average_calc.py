@@ -15,7 +15,9 @@ conn = psycopg2.connect(dbname=DBNAME, user=DBUSER, password=DBPASSWORD, host=DB
 def calculate_daily_averages_and_prune():
     cur = conn.cursor()
 
-    cur.execute("SELECT DISTINCT device_id FROM historical_data")
+    cur.execute(
+        "SELECT DISTINCT device_id FROM historical_data WHERE temp IS NOT NULL AND soil_hum IS NOT NULL AND air_hum IS NOT NULL AND light IS NOT NULL"
+    )
     device_ids = [row[0] for row in cur.fetchall()]
 
     for device_id in device_ids:
@@ -26,6 +28,7 @@ def calculate_daily_averages_and_prune():
                    AVG(air_hum) as avg_air_hum, AVG(light) as avg_light
             FROM historical_data
             WHERE device_id = %s AND created_at >= %s
+            ORDER BY created_at DESC
         """,
             (device_id, one_day_ago),
         )
