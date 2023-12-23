@@ -1,15 +1,22 @@
 from datetime import datetime, timedelta
-from jose import jwt, ExpiredSignatureError, JWTError
+from jose import jwt, ExpiredSignatureError
 from typing import Optional
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Request
 
 from core.settings import Settings
+
+from redis_conn import redis_client
+from rate_limiting_util import RateLimiter
 
 JWT_SECRET_KEY = Settings.JWT_SECRET_KEY
 ALGORITHM = Settings.ALGORITHM
 
 security = HTTPBearer()
+
+rate_limiter = RateLimiter(
+    redis_client, threshold=5, reset_interval=timedelta(minutes=15)
+)
 
 
 # Create JWT token for device_id
@@ -28,7 +35,14 @@ def create_device_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 # Decode JWT token with device_id
-async def get_device_id(token: HTTPAuthorizationCredentials = Depends(security)):
+async def get_device_id(
+    request: Request, token: HTTPAuthorizationCredentials = Depends(security)
+):
+    ip = request.client.host
+
+    if rate_limiter.is_rate_limited(ip):
+        raise HTTPException(status_code=429, detail="Too many failed attempts")
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -44,11 +58,14 @@ async def get_device_id(token: HTTPAuthorizationCredentials = Depends(security))
             headers={"WWW-Authenticate": "Bearer"},
         )
     except Exception as e:
+        rate_limiter.record_failure(ip)
         raise credentials_exception
 
     device_id = payload.get("sub")
     device_id = int(device_id)
+
     if device_id is None:
         raise credentials_exception
 
+    rate_limiter.reset_failures(ip)
     return device_id
