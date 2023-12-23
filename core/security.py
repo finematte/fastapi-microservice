@@ -6,8 +6,8 @@ from fastapi import HTTPException, Depends, status, Request
 
 from core.settings import Settings
 
-from redis_conn import redis_client
-from rate_limiting_util import RateLimiter
+from redis_conf.redis_conn import redis_client
+from redis_conf.rate_limiting_util import RateLimiter
 
 JWT_SECRET_KEY = Settings.JWT_SECRET_KEY
 ALGORITHM = Settings.ALGORITHM

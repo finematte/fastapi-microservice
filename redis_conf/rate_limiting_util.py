@@ -4,7 +4,10 @@ from datetime import timedelta
 
 class RateLimiter:
     def __init__(
-        self, redis_client: redis.Redis, threshold: int, reset_interval: timedelta
+        self,
+        redis_client: redis.Redis,
+        threshold: int,
+        reset_interval: timedelta,
     ):
         self.redis_client = redis_client
         self.threshold = threshold

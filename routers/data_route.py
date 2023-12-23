@@ -15,7 +15,7 @@ from schemas.data import DataUpdate
 from dependencies import get_db
 from core.security import get_device_id
 
-from limiter import limiter
+from core.limiter import limiter
 
 router = APIRouter()
 
