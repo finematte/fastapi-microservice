@@ -15,7 +15,7 @@ ALGORITHM = Settings.ALGORITHM
 security = HTTPBearer()
 
 rate_limiter = RateLimiter(
-    redis_client, threshold=5, reset_interval=timedelta(minutes=15)
+    redis_client, threshold=3, reset_interval=timedelta(minutes=15)
 )
 
 

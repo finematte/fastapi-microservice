@@ -1,6 +1,5 @@
 import redis
-from datetime import datetime, timedelta
-from fastapi import HTTPException
+from datetime import timedelta
 
 
 class RateLimiter:
@@ -30,7 +29,3 @@ class RateLimiter:
     def reset_failures(self, ip: str):
         key = self._get_redis_key(ip)
         self.redis_client.delete(key)
-
-
-# Usage example
-# rate_limiter = RateLimiter(redis_client, threshold=5, reset_interval=timedelta(minutes=15))
