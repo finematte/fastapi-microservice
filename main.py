@@ -2,10 +2,6 @@ import uvicorn
 from fastapi import FastAPI, Response, Request
 from dependencies import async_session
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
 from routers import (
     device_route,
     data_route,
@@ -14,20 +10,7 @@ from routers import (
     default_route,
 )
 
-
-def get_client_ip(request: Request) -> str:
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        ip = forwarded_for.split(",")[0]  # Take the first IP if there's a list
-    else:
-        ip = request.client.host
-    return ip
-
-
-limiter = Limiter(key_func=get_client_ip)
 app = FastAPI()
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(device_route.router)
 app.include_router(default_route.router)

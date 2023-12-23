@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, Request
+from fastapi import Depends, APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -10,23 +10,17 @@ from models.data import Data
 from models.historical_data import HistoricalData
 from models.daily_average import DailyAverage
 
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-
 from schemas.data import DataUpdate
 
-from main import get_client_ip
 from dependencies import get_db
 from core.security import get_device_id
-
-limiter = Limiter(key_func=get_client_ip)
 
 router = APIRouter()
 
 
 # ----------------- GET REQUESTS ----------------- #
 @router.get("/data")
-async def read_data(request: Request, db: AsyncSession = Depends(get_db)):
+async def read_data(db: AsyncSession = Depends(get_db)):
     """
     Returns data for all devices
     """
