@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -15,12 +15,15 @@ from schemas.data import DataUpdate
 from dependencies import get_db
 from core.security import get_device_id
 
+from limiter import limiter
+
 router = APIRouter()
 
 
 # ----------------- GET REQUESTS ----------------- #
 @router.get("/data")
-async def read_data(db: AsyncSession = Depends(get_db)):
+@limiter.limit("3/minute")
+async def read_data(request: Request, db: AsyncSession = Depends(get_db)):
     """
     Returns data for all devices
     """

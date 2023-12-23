@@ -1,6 +1,11 @@
 import uvicorn
 from fastapi import FastAPI, Response, Request
+from fastapi.responses import JSONResponse
 from dependencies import async_session
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from routers import (
     device_route,
@@ -12,11 +17,17 @@ from routers import (
 
 app = FastAPI()
 
+limiter = Limiter(key_func=get_remote_address)
+
 app.include_router(device_route.router)
 app.include_router(default_route.router)
 app.include_router(data_route.router)
 app.include_router(task_route.router)
 app.include_router(auth_route.router)
+
+
+async def rate_limit_handler(request, exc):
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
 
 @app.middleware("http")
