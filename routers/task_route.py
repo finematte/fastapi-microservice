@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Load
 
 from models.task import Task
+from models.device import Device
 
 from schemas.task import TaskAdd
 from schemas.task import TaskUpdate
@@ -72,20 +73,28 @@ async def manage_device_tasks(
     """
     Adds new task for given device_id
     """
-    new_task = Task(
-        device_id=device_id,
-        task_number=task_info.task_number,
-        status=task_info.status,
+    result = await db.execute(
+        select(Device).options(Load(Device).load_only(Device.device_id))
     )
+    device = result.scalars().all()
 
-    db.add(new_task)
-    await db.commit()
-    await db.refresh(new_task)
+    if not device:
+        return JSONResponse(content={}, status_code=404)
+    else:
+        new_task = Task(
+            device_id=device_id,
+            task_number=task_info.task_number,
+            status=task_info.status,
+        )
 
-    return JSONResponse(
-        content={"message": "Task added successfully", "task_id": new_task.task_id},
-        status_code=200,
-    )
+        db.add(new_task)
+        await db.commit()
+        await db.refresh(new_task)
+
+        return JSONResponse(
+            content={"message": "Task added successfully", "task_id": new_task.task_id},
+            status_code=200,
+        )
 
 
 @router.put("/devices/tasks/update")
