@@ -8,21 +8,19 @@ from datetime import datetime
 
 from models.data import Data
 from models.historical_data import HistoricalData
-from models.daily_average import DailyAverage
+from models.daily_average import DailyAverages
 
 from schemas.data import DataUpdate
 
 from dependencies import get_db
 from core.security import get_device_id
 
-from core.limiter import limiter
-
 router = APIRouter()
 
 
 # ----------------- GET REQUESTS ----------------- #
+'''
 @router.get("/data")
-@limiter.limit("3/minute")
 async def read_data(request: Request, db: AsyncSession = Depends(get_db)):
     """
     Returns data for all devices
@@ -40,11 +38,12 @@ async def read_data(request: Request, db: AsyncSession = Depends(get_db)):
         return JSONResponse(content={}, status_code=404)
 
     return data
+'''
 
 
 @router.get("/devices/data")
 async def read_device_data(
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -54,9 +53,7 @@ async def read_device_data(
         select(Data)
         .filter_by(device_id=device_id)
         .options(
-            Load(Data).load_only(
-                Data.device_id, Data.temp, Data.soil_hum, Data.air_hum, Data.light
-            )
+            Load(Data).load_only(Data.temp, Data.soil_hum, Data.air_hum, Data.light)
         )
     )
     device_data = result.scalars().all()
@@ -69,23 +66,23 @@ async def read_device_data(
 
 @router.get("/devices/data/history")
 async def read_device_data_history(
-    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns daily average data from last 7 days
     """
     result = await db.execute(
-        select(DailyAverage)
+        select(DailyAverages)
         .filter_by(device_id=device_id)
-        .order_by(desc(DailyAverage.date))
+        .order_by(desc(DailyAverages.date))
         .options(
-            Load(DailyAverage).load_only(
-                DailyAverage.device_id,
-                DailyAverage.avg_temp,
-                DailyAverage.avg_soil_hum,
-                DailyAverage.avg_air_hum,
-                DailyAverage.avg_light,
-                DailyAverage.date,
+            Load(DailyAverages).load_only(
+                DailyAverages.device_id,
+                DailyAverages.avg_temp,
+                DailyAverages.avg_soil_hum,
+                DailyAverages.avg_air_hum,
+                DailyAverages.avg_light,
+                DailyAverages.date,
             )
         )
     )
@@ -102,7 +99,7 @@ async def read_device_data_history(
 @router.post("/devices/data")
 async def update_device_data(
     payload: DataUpdate,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """

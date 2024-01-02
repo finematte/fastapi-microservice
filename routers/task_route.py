@@ -16,6 +16,7 @@ router = APIRouter()
 
 
 # ----------------- GET REQUESTS ----------------- #
+'''
 @router.get("/tasks")
 async def read_tasks(db: AsyncSession = Depends(get_db)):
     """
@@ -33,16 +34,17 @@ async def read_tasks(db: AsyncSession = Depends(get_db)):
 
     if not tasks:
         return JSONResponse(
-            json={},
+            content={},
             status_code=404,
         )
     else:
         return tasks
+'''
 
 
 @router.get("/devices/tasks")
 async def read_device_tasks(
-    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns tasks for given device's id
@@ -50,11 +52,7 @@ async def read_device_tasks(
     result = await db.execute(
         select(Task)
         .filter(Task.device_id == device_id, Task.status == 0)
-        .options(
-            Load(Task).load_only(
-                Task.task_id, Task.task_number, Task.status, Task.device_id
-            )
-        )
+        .options(Load(Task).load_only(Task.task_id, Task.task_number, Task.status))
     )
     tasks = result.scalars().all()
 
@@ -68,7 +66,7 @@ async def read_device_tasks(
 @router.post("/devices/tasks/add")
 async def manage_device_tasks(
     task_info: TaskAdd,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -93,7 +91,7 @@ async def manage_device_tasks(
 @router.put("/devices/tasks/update")
 async def manage_device_tasks(
     task_info: TaskUpdate,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """

@@ -15,7 +15,7 @@ ALGORITHM = Settings.ALGORITHM
 security = HTTPBearer()
 
 rate_limiter = RateLimiter(
-    redis_client, threshold=3, reset_interval=timedelta(minutes=15)
+    redis_client, threshold=5, reset_interval=timedelta(minutes=15)
 )
 
 
@@ -25,7 +25,7 @@ def create_device_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=60 * 24)
+        expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
 
     to_encode["sub"] = str(to_encode["sub"])
@@ -62,7 +62,7 @@ async def get_device_id(
         raise credentials_exception
 
     device_id = payload.get("sub")
-    device_id = int(device_id)
+    device_id = str(device_id)
 
     if device_id is None:
         raise credentials_exception
