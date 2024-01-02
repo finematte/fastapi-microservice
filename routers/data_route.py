@@ -77,7 +77,6 @@ async def read_device_data_history(
         .order_by(desc(DailyAverages.date))
         .options(
             Load(DailyAverages).load_only(
-                DailyAverages.device_id,
                 DailyAverages.avg_temp,
                 DailyAverages.avg_soil_hum,
                 DailyAverages.avg_air_hum,
