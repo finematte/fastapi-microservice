@@ -30,7 +30,6 @@ def calculate_daily_averages_and_prune():
                    AVG(air_hum) as avg_air_hum, AVG(light) as avg_light
             FROM historical_data
             WHERE device_id = %s AND created_at >= %s
-            ORDER BY created_at DESC
         """,
             (device_id, one_day_ago),
         )
