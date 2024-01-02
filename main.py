@@ -3,9 +3,6 @@ from fastapi import FastAPI, Response, Request
 from fastapi.responses import JSONResponse
 from dependencies import async_session
 
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-
 from routers import (
     device_route,
     data_route,
@@ -15,8 +12,6 @@ from routers import (
 )
 
 app = FastAPI()
-
-limiter = Limiter(key_func=get_remote_address)
 
 app.include_router(device_route.router)
 app.include_router(default_route.router)
