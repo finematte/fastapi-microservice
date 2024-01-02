@@ -53,7 +53,15 @@ async def read_device_tasks(
     result = await db.execute(
         select(Task)
         .filter(Task.device_id == device_id, Task.status == 0)
-        .options(Load(Task).load_only(Task.task_id, Task.task_number, Task.status))
+        .options(
+            Load(Task).load_only(
+                Task.task_id,
+                Task.task_number,
+                Task.status,
+                Task.created_at,
+                Task.updated_at,
+            )
+        )
     )
     tasks = result.scalars().all()
 

@@ -33,12 +33,11 @@ async def request_token(
     """
     Generates JWT auth token for device with given device_id.
     """
-    """
     ip = request.client.host
 
     if rate_limiter.is_rate_limited(ip):
         raise HTTPException(status_code=429, detail="Too many failed attempts")
-    """
+
     device = await db.execute(
         select(Device).filter(Device.device_id == payload.device_id)
     )
@@ -56,7 +55,7 @@ async def request_token(
         data={"sub": payload.device_id}, expires_delta=access_token_expires
     )
 
-    # rate_limiter.reset_failures(ip)
+    rate_limiter.reset_failures(ip)
 
     return JSONResponse(content={"access_token": token}, status_code=200)
 
