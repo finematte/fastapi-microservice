@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Load
 
 from models.task import Task
+from models.device import Device
 
 from schemas.task import TaskAdd
 from schemas.task import TaskUpdate
@@ -16,6 +17,7 @@ router = APIRouter()
 
 
 # ----------------- GET REQUESTS ----------------- #
+'''
 @router.get("/tasks")
 async def read_tasks(db: AsyncSession = Depends(get_db)):
     """
@@ -33,16 +35,17 @@ async def read_tasks(db: AsyncSession = Depends(get_db)):
 
     if not tasks:
         return JSONResponse(
-            json={},
+            content={},
             status_code=404,
         )
     else:
         return tasks
+'''
 
 
 @router.get("/devices/tasks")
 async def read_device_tasks(
-    device_id: int = Depends(get_device_id), db: AsyncSession = Depends(get_db)
+    device_id: str = Depends(get_device_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Returns tasks for given device's id
@@ -52,7 +55,11 @@ async def read_device_tasks(
         .filter(Task.device_id == device_id, Task.status == 0)
         .options(
             Load(Task).load_only(
-                Task.task_id, Task.task_number, Task.status, Task.device_id
+                Task.task_id,
+                Task.task_number,
+                Task.status,
+                Task.created_at,
+                Task.updated_at,
             )
         )
     )
@@ -68,32 +75,40 @@ async def read_device_tasks(
 @router.post("/devices/tasks/add")
 async def manage_device_tasks(
     task_info: TaskAdd,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Adds new task for given device_id
     """
-    new_task = Task(
-        device_id=device_id,
-        task_number=task_info.task_number,
-        status=task_info.status,
+    result = await db.execute(
+        select(Device).options(Load(Device).load_only(Device.device_id))
     )
+    device = result.scalars().all()
 
-    db.add(new_task)
-    await db.commit()
-    await db.refresh(new_task)
+    if not device:
+        return JSONResponse(content={}, status_code=404)
+    else:
+        new_task = Task(
+            device_id=device_id,
+            task_number=task_info.task_number,
+            status=task_info.status,
+        )
 
-    return JSONResponse(
-        content={"message": "Task added successfully", "task_id": new_task.task_id},
-        status_code=200,
-    )
+        db.add(new_task)
+        await db.commit()
+        await db.refresh(new_task)
+
+        return JSONResponse(
+            content={"message": "Task added successfully", "task_id": new_task.task_id},
+            status_code=200,
+        )
 
 
 @router.put("/devices/tasks/update")
 async def manage_device_tasks(
     task_info: TaskUpdate,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """

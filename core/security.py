@@ -6,8 +6,8 @@ from fastapi import HTTPException, Depends, status, Request
 
 from core.settings import Settings
 
-from redis_conn import redis_client
-from rate_limiting_util import RateLimiter
+from redis_conf.redis_conn import redis_client
+from redis_conf.rate_limiting_util import RateLimiter
 
 JWT_SECRET_KEY = Settings.JWT_SECRET_KEY
 ALGORITHM = Settings.ALGORITHM
@@ -25,7 +25,7 @@ def create_device_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=60 * 24)
+        expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
 
     to_encode["sub"] = str(to_encode["sub"])
@@ -62,7 +62,7 @@ async def get_device_id(
         raise credentials_exception
 
     device_id = payload.get("sub")
-    device_id = int(device_id)
+    device_id = str(device_id)
 
     if device_id is None:
         raise credentials_exception

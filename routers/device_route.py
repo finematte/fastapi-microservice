@@ -10,7 +10,7 @@ from models.task import Task
 from models.device import Device
 from models.data import Data
 from models.historical_data import HistoricalData
-from models.daily_average import DailyAverage
+from models.daily_average import DailyAverages
 
 from dependencies import get_db
 from core.security import get_device_id
@@ -18,7 +18,7 @@ from core.security import get_device_id
 router = APIRouter()
 
 
-async def delete_device_information(device_id: int, db: AsyncSession):
+async def delete_device_information(device_id: str, db: AsyncSession):
     while True:
         result = await db.execute(
             select(Task).filter(
@@ -35,7 +35,7 @@ async def delete_device_information(device_id: int, db: AsyncSession):
                 delete(HistoricalData).where(HistoricalData.device_id == device_id)
             )
             await db.execute(
-                delete(DailyAverage).where(DailyAverage.device_id == device_id)
+                delete(DailyAverages).where(DailyAverages.device_id == device_id)
             )
             await db.execute(delete(Task).where(Task.device_id == device_id))
             await db.execute(delete(Device).where(Device.device_id == device_id))
@@ -46,6 +46,7 @@ async def delete_device_information(device_id: int, db: AsyncSession):
             await asyncio.sleep(5)
 
 
+'''
 @router.get("/devices")
 async def read_devices(db: AsyncSession = Depends(get_db)):
     """
@@ -60,12 +61,13 @@ async def read_devices(db: AsyncSession = Depends(get_db)):
         return JSONResponse(content={}, status_code=404)
 
     return devices
+'''
 
 
 @router.delete("/delete_device")
 async def delete_device(
     background_tasks: BackgroundTasks,
-    device_id: int = Depends(get_device_id),
+    device_id: str = Depends(get_device_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
