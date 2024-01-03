@@ -1,2 +1,2 @@
 # fastapi-microservice
-Microservice for engineering project written in FastAPI
+Microservice for engineering project written in Python using FastAPI
